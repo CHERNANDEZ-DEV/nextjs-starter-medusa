@@ -2,7 +2,7 @@ name: Build and Push
 
 on:
   push:
-    branches: new-feature/Carlos
+    branches: [new-feature/Carlos]
   pull_request:
     branches: [main]
 
