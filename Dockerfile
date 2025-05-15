@@ -1,13 +1,15 @@
 # Etapa de construcción
 FROM node:18-alpine AS builder
 
+RUN npm install -g yarn@3.2.3
+
 WORKDIR /app
 
 # 1. Copiar archivos de configuración de dependencias
 COPY package.json yarn.lock ./
 
 # 2. Instalar todas las dependencias
-RUN yarn install --frozen-lockfile
+RUN yarn install --immutable
 
 # 3. Copiar el resto de archivos (excluyendo lo que está en .dockerignore)
 COPY . .
@@ -35,7 +37,7 @@ COPY --from=builder /app/.next ./.next
 # 5. Copiar configuraciones esenciales
 COPY --from=builder /app/next.config.js ./
 COPY --from=builder /app/medusa-config.js ./
-COPY --from=builder /app/.env.production ./.env  # Si usas variables de entorno
+COPY --from=builder /app/.env.production ./.env  
 
 # 6. Exponer puerto y ejecutar
 EXPOSE 3000
