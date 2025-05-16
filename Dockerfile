@@ -1,7 +1,11 @@
 # Etapa de construcción
 FROM node:18-alpine AS builder
 
-RUN npm install -g yarn@3.2.3
+# Instala curl si no está
+RUN apk add --no-cache curl
+
+# Descarga el instalador de Yarn Berry (Yarn 3+)
+RUN curl -sS https://yarnpkg.com/install.sh | bash
 
 WORKDIR /app
 
