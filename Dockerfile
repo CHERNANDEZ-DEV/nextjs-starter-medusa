@@ -5,7 +5,7 @@ FROM node:18-alpine AS builder
 RUN apk add --no-cache curl
 
 # Descarga el instalador de Yarn Berry (Yarn 3+)
-RUN curl -sS https://yarnpkg.com/install.sh | bash
+RUN curl -sS https://yarnpkg.com/install.sh | sh
 
 WORKDIR /app
 
