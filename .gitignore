@@ -44,10 +44,10 @@ yarn-error.log*
 node_modules
 
 # Yarn Berry
-.yarn/cache/
-.yarn/unplugged/
-.yarn/install-state.gz
-.pnp.*
+# .yarn/cache/
+# .yarn/unplugged/
+# .yarn/install-state.gz
+# .pnp.*
 
 
 .swc
