@@ -3,7 +3,10 @@ FROM node:18 AS builder
 
 WORKDIR /app
 
+RUN corepack enable
+
 COPY package*.json ./
+
 RUN yarn install
 
 COPY . .
