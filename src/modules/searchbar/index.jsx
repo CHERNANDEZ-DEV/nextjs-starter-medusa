@@ -1,13 +1,26 @@
 "use client";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import searchService from "../../services/searchbarService.js";
-import { Item } from "@radix-ui/react-accordion";
 
 const SearchWithFilters = () => {
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [query, setQuery] = useState("");
+    const [suggestions, setSuggestions] = useState([]);
+    const [showSuggestions, setShowSuggestions] = useState(true);
+
+    useEffect(() => {
+        const fetchSuggestions = async () => {
+            try {
+                const data = await searchService.getSuggestions();
+                setSuggestions(data.products || []);
+            } catch (error) {
+                console.error("Error fetching suggestions:", error);
+            }
+        };
+        fetchSuggestions();
+    }, []);
 
     const [filters, setFilters] = useState({
         categories: {
@@ -38,6 +51,7 @@ const SearchWithFilters = () => {
         }
 
         setLoading(true);
+        setShowSuggestions(false);
         try {
             const data = await searchService.getProducts(query);
             setProducts(data.products || []);
@@ -74,7 +88,7 @@ const SearchWithFilters = () => {
         }));
     };
 
-    // Extraer todas las opciones de color disponibles
+    // Extract all available color options
     const extractColors = (products) => {
         const colors = new Set();
         products.forEach(product => {
@@ -86,10 +100,8 @@ const SearchWithFilters = () => {
         return Array.from(colors);
     };
 
-    // Obtener el precio mínimo de las variantes de un producto
+    // Get the minimum price from a product's variants
     const getProductPrice = (product) => {
-        // En una implementación real, esto vendría de las variantes
-        // Por ahora usamos un valor fijo basado en el tipo de producto
         if (product.title.includes("T-Shirt")) return 25;
         if (product.title.includes("Sweatshirt")) return 45;
         if (product.title.includes("Shorts")) return 35;
@@ -99,8 +111,9 @@ const SearchWithFilters = () => {
 
     const filteredProducts = useMemo(() => {
         let result = [...products];
+        const sourceProducts = showSuggestions && products.length === 0 ? suggestions : products;
 
-        // Filtrar por categoría (basado en el título del producto)
+        // Filter by category (based on product title)
         const activeCategories = Object.keys(filters.categories).filter(
             cat => filters.categories[cat]
         );
@@ -112,7 +125,7 @@ const SearchWithFilters = () => {
             );
         }
 
-        // Filtrar por tallas
+        // Filter by sizes
         const activeSizes = Object.keys(filters.sizes).filter(
             size => filters.sizes[size]
         );
@@ -126,14 +139,14 @@ const SearchWithFilters = () => {
             );
         }
 
-        // Filtrar por colores
+        // Filter by colors
         const activeColors = Object.keys(filters.colors).filter(
             color => filters.colors[color]
         );
 
         if (activeColors.length > 0) {
             result = result.filter(product => {
-                // Productos con opción de color
+                // Products with color option
                 const hasColorOption = product.options.some(opt => opt.title === "Color");
                 if (!hasColorOption) return false;
 
@@ -145,14 +158,14 @@ const SearchWithFilters = () => {
             });
         }
 
-        // Filtrar por rango de precio
+        // Filter by price range
         const [minPrice, maxPrice] = filters.priceRange;
         result = result.filter(product => {
             const price = getProductPrice(product);
             return price >= minPrice && price <= maxPrice;
         });
 
-        // Ordenar por precio
+        // Sort by price
         if (filters.priceSort) {
             result.sort((a, b) => {
                 const aPrice = getProductPrice(a);
@@ -164,11 +177,11 @@ const SearchWithFilters = () => {
         }
 
         return result;
-    }, [products, filters]);
+    }, [products, filters, suggestions, showSuggestions]);
 
     const renderCheckboxGroup = (title, items, filterType) => (
         <div className="mb-8">
-            <h3 className="font-semibold mb-3">{title}</h3>
+            <h3 className="font-semibold mb-3 text-gray-800">{title}</h3>
             {Object.keys(items).map(item => (
                 <div key={item} className="flex mb-2">
                     <input
@@ -178,7 +191,7 @@ const SearchWithFilters = () => {
                         onChange={() => handleCheckboxChange(filterType, item)}
                         className="mr-2 h-4 w-4"
                     />
-                    <label className="mt-2">{item}</label>
+                    <label className="mt-2 text-gray-800">{item}</label>
                 </div>
             ))}
         </div>
@@ -211,13 +224,15 @@ const SearchWithFilters = () => {
             return <div className="text-center py-8 text-red-500">Error loading products: {error.message}</div>;
         }
 
-        if (filteredProducts.length === 0) {
-            return <div className="text-center py-8">Products not found. Try a different search!</div>;
+        const productsToDisplay = showSuggestions && products.length === 0 ? suggestions : filteredProducts;
+
+        if (productsToDisplay.length === 0) {
+            return <div className="text-center py-8">No products found. Try a different search!</div>;
         }
 
         return (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredProducts.map(product => {
+                {productsToDisplay.map(product => {
                     const price = getProductPrice(product);
                     const colorOption = product.options.find(opt => opt.title === "Color");
                     const sizeOption = product.options.find(opt => opt.title === "Size");
@@ -257,8 +272,8 @@ const SearchWithFilters = () => {
                                 <div className="flex justify-between items-center">
                                     <span className="font-bold text-gray-600">${price}</span>
                                     <span className={`px-2 py-1 text-xs rounded-full ${product.variants.some(v => v.allow_backorder || v.manage_inventory)
-                                            ? "bg-green-100 text-green-800"
-                                            : "bg-red-100 text-red-800"
+                                        ? "bg-green-100 text-green-800"
+                                        : "bg-red-100 text-red-800"
                                         }`}>
                                         {product.variants.some(v => v.allow_backorder || v.manage_inventory)
                                             ? "In Stock"
@@ -274,10 +289,10 @@ const SearchWithFilters = () => {
     };
 
     return (
-        <div className="flex flex-col md:flex-row gap-8 p-4  mx-auto">
-            {/* Filtros */}
+        <div className="flex flex-col md:flex-row gap-8 p-4 mx-auto">
+            {/* Filters */}
             <div className="w-full md:w-1/4 bg-white p-6 rounded-lg shadow">
-                <h2 className="text-xl font-bold mb-6">Filters</h2>
+                <h2 className="text-xl font-bold mb-6 text-gray-600">Filters</h2>
 
                 {renderCheckboxGroup("Categories", filters.categories, "categories")}
                 {renderCheckboxGroup("Sizes", filters.sizes, "sizes")}
@@ -302,11 +317,9 @@ const SearchWithFilters = () => {
                         </div>
                     ))}
                 </div>
-
-                {/* {renderPriceRange()} */}
             </div>
 
-            {/* Contenido principal */}
+            {/* Main content */}
             <div className="w-full md:w-3/4">
                 <form onSubmit={handleSearch} className="mb-8">
                     <div className="relative">
@@ -314,19 +327,32 @@ const SearchWithFilters = () => {
                             type="text"
                             placeholder="Search products..."
                             value={query}
-                            onChange={(e) => setQuery(e.target.value)}
+                            onChange={(e) => {
+                                setQuery(e.target.value);
+                                if (e.target.value === "") {
+                                    setShowSuggestions(true);
+                                    setProducts([]);
+                                }
+                            }}
                             className="w-full p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-700"
                         />
                         <button
                             type="submit"
-                            className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-gray-500 text-white p-2 rounded-md hover:bg-gray-600 transition-colors"
+                            className="absolute right-2 top-1/2 transform -translate-y-1/2 w-28 bg-gray-500 text-white p-2 rounded-md hover:bg-gray-600 transition-colors"
                         >
                             Search
                         </button>
                     </div>
                 </form>
 
-                {renderProducts()}
+                {showSuggestions && products.length === 0 && (
+                    <div className="mb-6 text-gray-600">
+                        <h2 className="text-xl font-bold mb-4">Suggested products</h2>
+                        {renderProducts()}
+                    </div>
+                )}
+
+                {!showSuggestions && renderProducts()}
             </div>
         </div>
     );
