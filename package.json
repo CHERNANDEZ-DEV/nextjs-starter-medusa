@@ -13,9 +13,10 @@
     "start": "next start -p 8000",
     "lint": "next lint",
     "analyze": "ANALYZE=true next build",
-    "test": "jest",
     "test:watch": "jest --watch",
-    "cypress:open": "cypress open"
+    "cypress:open": "cypress open",
+    "test": "jest",
+    "test:coverage": "jest --coverage"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.0",
@@ -24,6 +25,7 @@
     "@radix-ui/react-accordion": "^1.2.1",
     "@stripe/react-stripe-js": "^1.7.2",
     "@stripe/stripe-js": "^1.29.0",
+    "axios": "^1.9.0",
     "lodash": "^4.17.21",
     "next": "15.0.3",
     "pg": "^8.11.3",
@@ -37,8 +39,10 @@
   },
   "devDependencies": {
     "@babel/core": "^7.17.5",
+    "@jest/globals": "^29.7.0",
     "@medusajs/types": "latest",
     "@medusajs/ui-preset": "latest",
+    "@swc/jest": "^0.2.38",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",

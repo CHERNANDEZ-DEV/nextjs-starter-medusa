@@ -1,87 +1,51 @@
 "use client";
 import { useState, useMemo } from "react";
+import searchService from "../../services/searchbarService.js";
+import { Item } from "@radix-ui/react-accordion";
 
 const SearchWithFilters = () => {
-    // Array de productos simulado
-    const allProducts = [
-        { id: 1, name: "Refrigerador Samsung", category: "Appliances", brand: "Samsung", price: 1200 },
-        { id: 2, name: "Sofá moderno", category: "Home", brand: "Mabe", price: 800 },
-        { id: 3, name: "Zapatillas Nike Air", category: "Sport", brand: "Nike", price: 150 },
-        { id: 4, name: "Laptop Lenovo", category: "Appliances", brand: "Lenovo", price: 950 },
-        { id: 5, name: "Juego de mesa", category: "Home", brand: "Mabe", price: 120 },
-        { id: 6, name: "Balón de fútbol", category: "Sport", brand: "Nike", price: 50 },
-        { id: 7, name: "TV Samsung 4K", category: "Appliances", brand: "Samsung", price: 750 },
-        { id: 8, name: "Monitor Lenovo", category: "Appliances", brand: "Lenovo", price: 300 },
-    ];
-
+    const [products, setProducts] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
     const [query, setQuery] = useState("");
+
     const [filters, setFilters] = useState({
         categories: {
-            Appliances: false,
-            Home: false,
-            Sport: false
+            "T-Shirt": false,
+            "Sweatshirt": false,
+            "Shorts": false,
+            "Sweatpants": false
         },
-        brands: {
-            Lenovo: false,
-            Mabe: false,
-            Nike: false,
-            Samsung: false
+        sizes: {
+            S: false,
+            M: false,
+            L: false,
+            XL: false
+        },
+        colors: {
+            Black: false,
+            White: false
         },
         priceSort: "",
-        priceRange: [50, 1500]
+        priceRange: [0, 1000]
     });
 
-    // Función para filtrar y ordenar productos
-    const filteredProducts = useMemo(() => {
-        let result = [...allProducts];
-
-        // Filtrar por búsqueda
-        if (query.trim()) {
-            result = result.filter(product =>
-                product.name.toLowerCase().includes(query.toLowerCase())
-            );
-        }
-
-        // Filtrar por categorías seleccionadas
-        const activeCategories = Object.keys(filters.categories).filter(
-            cat => filters.categories[cat]
-        );
-        if (activeCategories.length > 0) {
-            result = result.filter(product =>
-                activeCategories.includes(product.category)
-            );
-        }
-
-        // Filtrar por marcas seleccionadas
-        const activeBrands = Object.keys(filters.brands).filter(
-            brand => filters.brands[brand]
-        );
-        if (activeBrands.length > 0) {
-            result = result.filter(product =>
-                activeBrands.includes(product.brand)
-            );
-        }
-
-        // Filtrar por rango de precio
-        result = result.filter(
-            product =>
-                product.price >= filters.priceRange[0] &&
-                product.price <= filters.priceRange[1]
-        );
-
-        // Ordenar por precio
-        if (filters.priceSort === "low-high") {
-            result.sort((a, b) => a.price - b.price);
-        } else if (filters.priceSort === "high-low") {
-            result.sort((a, b) => b.price - a.price);
-        }
-
-        return result;
-    }, [query, filters, allProducts]);
-
-    const handleSearch = (e) => {
+    const handleSearch = async (e) => {
         e.preventDefault();
-        // La búsqueda se maneja automáticamente con el estado
+        if (!query) {
+            alert("Please enter a search term");
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const data = await searchService.getProducts(query);
+            setProducts(data.products || []);
+            setLoading(false);
+        } catch (error) {
+            setError(error);
+            setLoading(false);
+        }
     };
 
     const handleCheckboxChange = (filterType, name) => {
@@ -110,11 +74,103 @@ const SearchWithFilters = () => {
         }));
     };
 
+    // Extraer todas las opciones de color disponibles
+    const extractColors = (products) => {
+        const colors = new Set();
+        products.forEach(product => {
+            const colorOption = product.options.find(opt => opt.title === "Color");
+            if (colorOption) {
+                colorOption.values.forEach(val => colors.add(val.value));
+            }
+        });
+        return Array.from(colors);
+    };
+
+    // Obtener el precio mínimo de las variantes de un producto
+    const getProductPrice = (product) => {
+        // En una implementación real, esto vendría de las variantes
+        // Por ahora usamos un valor fijo basado en el tipo de producto
+        if (product.title.includes("T-Shirt")) return 25;
+        if (product.title.includes("Sweatshirt")) return 45;
+        if (product.title.includes("Shorts")) return 35;
+        if (product.title.includes("Sweatpants")) return 50;
+        return 30;
+    };
+
+    const filteredProducts = useMemo(() => {
+        let result = [...products];
+
+        // Filtrar por categoría (basado en el título del producto)
+        const activeCategories = Object.keys(filters.categories).filter(
+            cat => filters.categories[cat]
+        );
+        if (activeCategories.length > 0) {
+            result = result.filter(product =>
+                activeCategories.some(cat =>
+                    product.title.toLowerCase().includes(cat.toLowerCase())
+                )
+            );
+        }
+
+        // Filtrar por tallas
+        const activeSizes = Object.keys(filters.sizes).filter(
+            size => filters.sizes[size]
+        );
+        if (activeSizes.length > 0) {
+            result = result.filter(product =>
+                product.variants.some(variant =>
+                    variant.options.some(opt =>
+                        opt.option?.title === "Size" &&
+                        activeSizes.includes(opt.value)
+                    ))
+            );
+        }
+
+        // Filtrar por colores
+        const activeColors = Object.keys(filters.colors).filter(
+            color => filters.colors[color]
+        );
+
+        if (activeColors.length > 0) {
+            result = result.filter(product => {
+                // Productos con opción de color
+                const hasColorOption = product.options.some(opt => opt.title === "Color");
+                if (!hasColorOption) return false;
+
+                return product.variants.some(variant =>
+                    variant.options.some(opt =>
+                        opt.option?.title === "Color" &&
+                        activeColors.includes(opt.value)
+                    ))
+            });
+        }
+
+        // Filtrar por rango de precio
+        const [minPrice, maxPrice] = filters.priceRange;
+        result = result.filter(product => {
+            const price = getProductPrice(product);
+            return price >= minPrice && price <= maxPrice;
+        });
+
+        // Ordenar por precio
+        if (filters.priceSort) {
+            result.sort((a, b) => {
+                const aPrice = getProductPrice(a);
+                const bPrice = getProductPrice(b);
+                return filters.priceSort === "low-high"
+                    ? aPrice - bPrice
+                    : bPrice - aPrice;
+            });
+        }
+
+        return result;
+    }, [products, filters]);
+
     const renderCheckboxGroup = (title, items, filterType) => (
         <div className="mb-8">
             <h3 className="font-semibold mb-3">{title}</h3>
             {Object.keys(items).map(item => (
-                <div key={item} className="flex items-center mb-2">
+                <div key={item} className="flex mb-2">
                     <input
                         type="checkbox"
                         id={`${filterType}-${item}`}
@@ -122,7 +178,7 @@ const SearchWithFilters = () => {
                         onChange={() => handleCheckboxChange(filterType, item)}
                         className="mr-2 h-4 w-4"
                     />
-                    <label htmlFor={`${filterType}-${item}`}>{item}</label>
+                    <label className="mt-2">{item}</label>
                 </div>
             ))}
         </div>
@@ -139,20 +195,93 @@ const SearchWithFilters = () => {
                         value={value}
                         onChange={(e) => handlePriceRangeChange(index, e.target.value)}
                         className="w-1/2 p-2 border rounded"
+                        min="0"
                     />
                 ))}
             </div>
         </div>
     );
 
+    const renderProducts = () => {
+        if (loading) {
+            return <div className="text-center py-8">Loading products...</div>;
+        }
+
+        if (error) {
+            return <div className="text-center py-8 text-red-500">Error loading products: {error.message}</div>;
+        }
+
+        if (filteredProducts.length === 0) {
+            return <div className="text-center py-8">Products not found. Try a different search!</div>;
+        }
+
+        return (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredProducts.map(product => {
+                    const price = getProductPrice(product);
+                    const colorOption = product.options.find(opt => opt.title === "Color");
+                    const sizeOption = product.options.find(opt => opt.title === "Size");
+                    const availableColors = colorOption ? colorOption.values.map(v => v.value) : [];
+                    const availableSizes = sizeOption ? sizeOption.values.map(v => v.value) : [];
+
+                    return (
+                        <div key={product.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+                            <div className="h-48 bg-gray-200 flex items-center justify-center">
+                                <img
+                                    src={product.thumbnail || product.images[0]?.url}
+                                    alt={product.title}
+                                    className="h-full w-full object-cover"
+                                    onError={(e) => {
+                                        e.target.onerror = null;
+                                        e.target.src = "https://via.placeholder.com/300";
+                                    }}
+                                />
+                            </div>
+                            <div className="p-4">
+                                <h3 className="font-semibold text-lg mb-1">{product.title}</h3>
+                                <p className="text-gray-600 mb-2 line-clamp-2">{product.description}</p>
+
+                                <div className="mb-2">
+                                    {availableColors.length > 0 && (
+                                        <div className="text-sm text-gray-500">
+                                            Colors: {availableColors.join(", ")}
+                                        </div>
+                                    )}
+                                    {availableSizes.length > 0 && (
+                                        <div className="text-sm text-gray-500">
+                                            Sizes: {availableSizes.join(", ")}
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="flex justify-between items-center">
+                                    <span className="font-bold text-gray-600">${price}</span>
+                                    <span className={`px-2 py-1 text-xs rounded-full ${product.variants.some(v => v.allow_backorder || v.manage_inventory)
+                                            ? "bg-green-100 text-green-800"
+                                            : "bg-red-100 text-red-800"
+                                        }`}>
+                                        {product.variants.some(v => v.allow_backorder || v.manage_inventory)
+                                            ? "In Stock"
+                                            : "Out of Stock"}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+        );
+    };
+
     return (
-        <div className="flex flex-col md:flex-row gap-8 p-4 max-w-6xl mx-auto">
+        <div className="flex flex-col md:flex-row gap-8 p-4  mx-auto">
             {/* Filtros */}
             <div className="w-full md:w-1/4 bg-white p-6 rounded-lg shadow">
                 <h2 className="text-xl font-bold mb-6">Filters</h2>
 
                 {renderCheckboxGroup("Categories", filters.categories, "categories")}
-                {renderCheckboxGroup("Brand", filters.brands, "brands")}
+                {renderCheckboxGroup("Sizes", filters.sizes, "sizes")}
+                {renderCheckboxGroup("Colors", filters.colors, "colors")}
 
                 <div className="mb-8">
                     <h3 className="font-semibold mb-3">Price</h3>
@@ -162,18 +291,19 @@ const SearchWithFilters = () => {
                     ].map(({ id, label, value }) => (
                         <div key={id} className="flex items-center mb-2">
                             <input
-                                type="checkbox"
+                                type="radio"
+                                name="priceSort"
                                 id={id}
                                 checked={filters.priceSort === value}
                                 onChange={() => handlePriceSortChange(value)}
                                 className="mr-2 h-4 w-4"
                             />
-                            <label htmlFor={id}>{label}</label>
+                            <label className="mt-4">{label}</label>
                         </div>
                     ))}
                 </div>
 
-                {renderPriceRange()}
+                {/* {renderPriceRange()} */}
             </div>
 
             {/* Contenido principal */}
@@ -185,33 +315,18 @@ const SearchWithFilters = () => {
                             placeholder="Search products..."
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
-                            className="w-full p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-700"
                         />
                         <button
                             type="submit"
-                            className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600"
+                            className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-gray-500 text-white p-2 rounded-md hover:bg-gray-600 transition-colors"
                         >
-                            Buscar
+                            Search
                         </button>
                     </div>
                 </form>
 
-                <div className="bg-white p-6 rounded-lg shadow">
-                    {filteredProducts.length > 0 ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {filteredProducts.map(product => (
-                                <div key={product.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-                                    <h3 className="font-semibold text-lg">{product.name}</h3>
-                                    <p className="text-gray-600">{product.brand}</p>
-                                    <p className="text-gray-500">{product.category}</p>
-                                    <p className="font-bold text-blue-600 mt-2">${product.price.toFixed(2)}</p>
-                                </div>
-                            ))}
-                        </div>
-                    ) : (
-                        <p className="text-gray-500 text-center py-8">No se encontraron productos que coincidan con tu búsqueda</p>
-                    )}
-                </div>
+                {renderProducts()}
             </div>
         </div>
     );
