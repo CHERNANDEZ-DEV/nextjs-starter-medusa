@@ -2,25 +2,19 @@ import type { Config } from 'jest';
 import nextJest from 'next/jest.js';
 
 const createJestConfig = nextJest({
-  dir: './', // Ruta a tu aplicación Next.js
+  dir: './',
 });
 
 const config: Config = {
   coverageProvider: 'v8',
   testEnvironment: 'jsdom',
-
-  // Configuración adicional importante para Next.js y Testing Library
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
   moduleNameMapper: {
-    '^@/(.*)$': '<rootDir>/src/$1', // Mapeo de alias @/
-    '^@modules/(.*)$': '<rootDir>/src/modules/$1', // Mapeo para módulos
-    '^@lib/(.*)$': '<rootDir>/src/lib/$1', // Mapeo para utilities
+    '^@/(.*)$': '<rootDir>/src/$1',
+    '^@modules/(.*)$': '<rootDir>/src/modules/$1',
+    '^@lib/(.*)$': '<rootDir>/src/lib/$1',
   },
-
-  // Extensión de archivos que Jest buscará
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
-
-  // Transformar archivos TypeScript
   transform: {
     '^.+\\.(t|j)sx?$': [
       '@swc/jest',
@@ -39,22 +33,19 @@ const config: Config = {
       },
     ],
   },
-
-  // Ignorar node_modules y otros directorios
   testPathIgnorePatterns: ['<rootDir>/node_modules/', '<rootDir>/.next/'],
-
-  // Directorios donde Jest buscará tests
   testMatch: [
     '<rootDir>/src/**/*.test.{ts,tsx,js,jsx}',
     '<rootDir>/tests/**/*.test.{ts,tsx,js,jsx}',
   ],
 
-  // Configuración de cobertura
+  // 👇 Configuración específica para limitar la cobertura a SearchWithFilters
   collectCoverage: true,
   coverageDirectory: '<rootDir>/coverage',
-  coverageReporters: ['json', 'lcov', 'text', 'clover'],
+  coverageReporters: ['html', 'text'], // Cambiado a formato legible
   collectCoverageFrom: [
-    'src/**/*.{ts,tsx}',
+    'src/modules/searchbar/index.jsx', // 👈 Ruta exacta de tu archivo
+    // Opcional: excluir otros archivos del reporte
     '!src/**/*.d.ts',
     '!src/**/*.stories.tsx',
     '!src/**/index.ts',
