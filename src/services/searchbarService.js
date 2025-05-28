@@ -2,13 +2,15 @@
 import axios from 'axios';
 import api from './api';
 
+const PUBLISHABLE_API_KEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY
+
 const getProducts = async (query) => {
     try {
         const response = await axios.get(`http://localhost:9000/store/products?title=${query}`, {
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
-                'x-publishable-api-key': 'pk_dd5d96cf87f17625b31602730e8302c00cf0ea7f80a15638a95252877e787b25',
+                'x-publishable-api-key': PUBLISHABLE_API_KEY,
             },
         });
         if (response.status !== 200) {
@@ -27,7 +29,7 @@ const getSuggestions = async () => {
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
-                'x-publishable-api-key': 'pk_dd5d96cf87f17625b31602730e8302c00cf0ea7f80a15638a95252877e787b25',
+                'x-publishable-api-key': PUBLISHABLE_API_KEY,
             },
         });
         if (response.status !== 200) {
