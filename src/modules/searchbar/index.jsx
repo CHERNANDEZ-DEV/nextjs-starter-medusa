@@ -27,7 +27,8 @@ const SearchWithFilters = () => {
             "T-Shirt": false,
             "Sweatshirt": false,
             "Shorts": false,
-            "Sweatpants": false
+            "Sweatpants": false,
+            "Accessories": false,
         },
         sizes: {
             S: false,
@@ -88,19 +89,11 @@ const SearchWithFilters = () => {
         }));
     };
 
-    // Extract all available color options
-    const extractColors = (products) => {
-        const colors = new Set();
-        products.forEach(product => {
-            const colorOption = product.options.find(opt => opt.title === "Color");
-            if (colorOption) {
-                colorOption.values.forEach(val => colors.add(val.value));
-            }
-        });
-        return Array.from(colors);
+    const handleSliderChange = (e, index) => {
+        const value = Number(e.target.value);
+        handlePriceRangeChange(index, value);
     };
 
-    // Get the minimum price from a product's variants
     const getProductPrice = (product) => {
         if (product.title.includes("T-Shirt")) return 25;
         if (product.title.includes("Sweatshirt")) return 45;
@@ -110,10 +103,10 @@ const SearchWithFilters = () => {
     };
 
     const filteredProducts = useMemo(() => {
-        let result = [...products];
         const sourceProducts = showSuggestions && products.length === 0 ? suggestions : products;
+        let result = [...sourceProducts];
 
-        // Filter by category (based on product title)
+        // Filter by category
         const activeCategories = Object.keys(filters.categories).filter(
             cat => filters.categories[cat]
         );
@@ -131,31 +124,28 @@ const SearchWithFilters = () => {
         );
         if (activeSizes.length > 0) {
             result = result.filter(product =>
-                product.variants.some(variant =>
-                    variant.options.some(opt =>
+                product.variants?.some(variant =>
+                    variant.options?.some(opt =>
                         opt.option?.title === "Size" &&
                         activeSizes.includes(opt.value)
-                    ))
-            );
+                    )
+                )
+            )
         }
 
         // Filter by colors
         const activeColors = Object.keys(filters.colors).filter(
             color => filters.colors[color]
         );
-
         if (activeColors.length > 0) {
-            result = result.filter(product => {
-                // Products with color option
-                const hasColorOption = product.options.some(opt => opt.title === "Color");
-                if (!hasColorOption) return false;
-
-                return product.variants.some(variant =>
-                    variant.options.some(opt =>
+            result = result.filter(product =>
+                product.variants?.some(variant =>
+                    variant.options?.some(opt =>
                         opt.option?.title === "Color" &&
                         activeColors.includes(opt.value)
-                    ))
-            });
+                    )
+                )
+            )
         }
 
         // Filter by price range
@@ -191,26 +181,42 @@ const SearchWithFilters = () => {
                         onChange={() => handleCheckboxChange(filterType, item)}
                         className="mr-2 h-4 w-4"
                     />
-                    <label className="mt-2 text-gray-800">{item}</label>
+                    <label htmlFor={`${filterType}-${item}`} className="mt-2 text-gray-800">
+                        {item}
+                    </label>
                 </div>
             ))}
         </div>
     );
 
-    const renderPriceRange = () => (
-        <div className="mb-4">
+    const renderPriceRangeSlider = () => (
+        <div className="mb-8">
             <h3 className="font-semibold mb-3">Price range</h3>
+            <div className="flex items-center justify-between mb-2">
+                <span className="text-sm text-gray-600">${filters.priceRange[0]}</span>
+                <span className="text-sm text-gray-600">${filters.priceRange[1]}</span>
+            </div>
             <div className="flex gap-4">
-                {filters.priceRange.map((value, index) => (
-                    <input
-                        key={index}
-                        type="number"
-                        value={value}
-                        onChange={(e) => handlePriceRangeChange(index, e.target.value)}
-                        className="w-1/2 p-2 border rounded"
-                        min="0"
-                    />
-                ))}
+                <input
+                    type="range"
+                    min="0"
+                    max="1000"
+                    value={filters.priceRange[0]}
+                    onChange={(e) => handleSliderChange(e, 0)}
+                    className="w-full"
+                />
+                <input
+                    type="range"
+                    min="0"
+                    max="1000"
+                    value={filters.priceRange[1]}
+                    onChange={(e) => handleSliderChange(e, 1)}
+                    className="w-full"
+                />
+            </div>
+            <div className="flex justify-between mt-2">
+                <span className="text-xs text-gray-500">Min: $0</span>
+                <span className="text-xs text-gray-500">Max: $1000</span>
             </div>
         </div>
     );
@@ -224,26 +230,24 @@ const SearchWithFilters = () => {
             return <div className="text-center py-8 text-red-500">Error loading products: {error.message}</div>;
         }
 
-        const productsToDisplay = showSuggestions && products.length === 0 ? suggestions : filteredProducts;
-
-        if (productsToDisplay.length === 0) {
+        if (filteredProducts.length === 0) {
             return <div className="text-center py-8">No products found. Try a different search!</div>;
         }
 
         return (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {productsToDisplay.map(product => {
+                {filteredProducts.map(product => {
                     const price = getProductPrice(product);
-                    const colorOption = product.options.find(opt => opt.title === "Color");
-                    const sizeOption = product.options.find(opt => opt.title === "Size");
-                    const availableColors = colorOption ? colorOption.values.map(v => v.value) : [];
-                    const availableSizes = sizeOption ? sizeOption.values.map(v => v.value) : [];
+                    const colorOption = product.options?.find(opt => opt.title === "Color") || { values: [] };
+                    const sizeOption = product.options?.find(opt => opt.title === "Size") || { values: [] };
+                    const availableColors = colorOption.values.map(v => v.value) || [];
+                    const availableSizes = sizeOption.values.map(v => v.value) || [];
 
                     return (
                         <div key={product.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
                             <div className="h-48 bg-gray-200 flex items-center justify-center">
                                 <img
-                                    src={product.thumbnail || product.images[0]?.url}
+                                    src={product.thumbnail || product.images?.[0]?.url || "https://via.placeholder.com/300"}
                                     alt={product.title}
                                     className="h-full w-full object-cover"
                                     onError={(e) => {
@@ -271,11 +275,11 @@ const SearchWithFilters = () => {
 
                                 <div className="flex justify-between items-center">
                                     <span className="font-bold text-gray-600">${price}</span>
-                                    <span className={`px-2 py-1 text-xs rounded-full ${product.variants.some(v => v.allow_backorder || v.manage_inventory)
-                                        ? "bg-green-100 text-green-800"
-                                        : "bg-red-100 text-red-800"
+                                    <span className={`px-2 py-1 text-xs rounded-full ${product.variants?.some(v => v.allow_backorder || v.manage_inventory)
+                                            ? "bg-green-100 text-green-800"
+                                            : "bg-red-100 text-red-800"
                                         }`}>
-                                        {product.variants.some(v => v.allow_backorder || v.manage_inventory)
+                                        {product.variants?.some(v => v.allow_backorder || v.manage_inventory)
                                             ? "In Stock"
                                             : "Out of Stock"}
                                     </span>
@@ -313,10 +317,12 @@ const SearchWithFilters = () => {
                                 onChange={() => handlePriceSortChange(value)}
                                 className="mr-2 h-4 w-4"
                             />
-                            <label className="mt-4">{label}</label>
+                            <label htmlFor={id} className="mt-4">{label}</label>
                         </div>
                     ))}
                 </div>
+
+                {renderPriceRangeSlider()}
             </div>
 
             {/* Main content */}
@@ -348,11 +354,10 @@ const SearchWithFilters = () => {
                 {showSuggestions && products.length === 0 && (
                     <div className="mb-6 text-gray-600">
                         <h2 className="text-xl font-bold mb-4">Suggested products</h2>
-                        {renderProducts()}
                     </div>
                 )}
 
-                {!showSuggestions && renderProducts()}
+                {renderProducts()}
             </div>
         </div>
     );
