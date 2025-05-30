@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { act } from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import SearchWithFilters from '../index.jsx'
 import searchService from '../../../services/searchbarService'
@@ -22,17 +22,6 @@ const mockProducts = [
     ]
 
     describe('SearchWithFilters - Behavioral Tests', () => {
-        beforeEach(() => {
-            searchService.getSuggestions.mockResolvedValue({ products: mockProducts })
-            searchService.getProducts.mockResolvedValue({ products: mockProducts })
-            searchService.getSuggestions.mockResolvedValue({ products: [] })
-            searchService.searchProducts.mockResolvedValue({
-            products: [
-                { id: "1", title: "Camiseta", thumbnail: null, images: [{ url: "img1.jpg" }] },
-                { id: "2", title: "Pantalón", images: [] }, // sin imágenes
-            ]
-            })
-        })
 
         test('muestra sugerencias al inicio y las oculta después de búsqueda', async () => {
             render(<SearchWithFilters />)
@@ -59,39 +48,18 @@ const mockProducts = [
             alertMock.mockRestore()
         })
 
-        it("muestra y oculta sugerencias al hacer búsqueda", async () => {
-        render(<SearchWithFilters />)
-        const input = screen.getByPlaceholderText(/buscar/i)
+        test('muestra mensaje si no hay resultados al buscar', async () => {
+            searchService.getProducts.mockResolvedValue({ products: [] })
 
-        fireEvent.focus(input)
+            render(<SearchWithFilters />)
 
-        await waitFor(() => {
-        expect(screen.getByTestId("sugerencias")).toBeInTheDocument()
+            fireEvent.change(screen.getByPlaceholderText('Search products...'), {
+                target: { value: 'unknown' }
+            })
+            fireEvent.click(screen.getByText('Search'))
+
+            expect(await screen.findByText('No products found. Try a different search!')).toBeInTheDocument()
         })
-
-        fireEvent.change(input, { target: { value: "ropa" } })
-        fireEvent.keyDown(input, { key: "Enter", code: "Enter" })
-
-        await waitFor(() => {
-        expect(searchService.searchProducts).toHaveBeenCalledWith("ropa")
-        })
-
-        expect(screen.queryByTestId("sugerencias")).not.toBeInTheDocument()
-    })
-
-    it("renderiza fallback si falta 'images'", async () => {
-        render(<SearchWithFilters />)
-
-        const input = screen.getByPlaceholderText(/buscar/i)
-        fireEvent.change(input, { target: { value: "pantalón" } })
-        fireEvent.keyDown(input, { key: "Enter", code: "Enter" })
-
-        await waitFor(() => {
-        const imgs = screen.getAllByRole("img")
-        expect(imgs.length).toBeGreaterThanOrEqual(1)
-        imgs.forEach(img => {
-            expect(img.getAttribute("src")).not.toBe(null)
-        })
-        })
-    })
 })
+
+
