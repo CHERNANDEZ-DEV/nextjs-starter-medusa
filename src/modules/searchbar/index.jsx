@@ -1,6 +1,7 @@
 "use client";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect , useCallback} from "react";
 import searchService from "../../services/searchbarService.js";
+import { debounce } from "lodash";
 
 const SearchWithFilters = () => {
     const [products, setProducts] = useState([]);
@@ -42,24 +43,28 @@ const SearchWithFilters = () => {
         priceSort: "",
         priceRange: [0, 1000]
     });
+    
+    const debouncedSearch = useCallback(
+        debounce(async (searchTerm) => {
+            if (!searchTerm) return;
 
-    const handleSearch = async (e) => {
-        e.preventDefault();
-        if (!query) {
-            alert("Please enter a search term");
-            return;
-        }
+            setLoading(true);
+            setShowSuggestions(false);
 
-        setLoading(true);
-        setShowSuggestions(false);
-        try {
-            const data = await searchService.getProducts(query);
-            setProducts(data.products || []);
-            setLoading(false);
-        } catch (error) {
-            setError(error);
-            setLoading(false);
-        }
+            try {
+                const data = await searchService.getProducts(searchTerm);
+                setProducts(data.products || []);
+            } catch (err) {
+                setError(err);
+            } finally {
+                setLoading(false);
+            }
+        }, 500),[]
+    );
+    const handleSearch = (e) => {
+        const value = e.target.value;
+        setQuery(value);
+        debouncedSearch(value);
     };
 
     const handleCheckboxChange = (filterType, name) => {
@@ -332,6 +337,9 @@ const SearchWithFilters = () => {
                                 if (e.target.value === "") {
                                     setShowSuggestions(true);
                                     setProducts([]);
+                                }else{
+                                    setShowSuggestions(false);
+                                    debouncedSearch(e.target.value);
                                 }
                             }}
                             className="w-full p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-700"
