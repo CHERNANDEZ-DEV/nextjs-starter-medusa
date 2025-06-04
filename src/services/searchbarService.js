@@ -8,7 +8,7 @@ const getProducts = async (query) => {
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
-                'x-publishable-api-key': 'pk_dd5d96cf87f17625b31602730e8302c00cf0ea7f80a15638a95252877e787b25',
+                'x-publishable-api-key': 'pk_c6b84fb008681ac9ff24be015490e656be7decea654630000d8b50e279780590',
             },
         });
         if (response.status !== 200) {
@@ -27,7 +27,7 @@ const getSuggestions = async () => {
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
-                'x-publishable-api-key': 'pk_dd5d96cf87f17625b31602730e8302c00cf0ea7f80a15638a95252877e787b25',
+                'x-publishable-api-key': 'pk_c6b84fb008681ac9ff24be015490e656be7decea654630000d8b50e279780590',
             },
         });
         if (response.status !== 200) {
