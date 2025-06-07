@@ -29,6 +29,7 @@ const getSuggestions = async () => {
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
+
                 'x-publishable-api-key': PUBLISHABLE_API_KEY,
             },
         });
