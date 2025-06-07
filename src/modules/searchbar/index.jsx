@@ -315,6 +315,7 @@ const SearchWithFilters = () => {
                   {availableSizes.length > 0 && (
                     <div className="text-sm text-gray-500">
                       Sizes: {availableSizes.join(", ")}
+
                     </div>
                   )}
                 </div>
@@ -379,6 +380,7 @@ const SearchWithFilters = () => {
                 className="mr-2 h-4 w-4"
               />
               <label className="mt-4">{label}</label>
+
             </div>
           ))}
         </div>
