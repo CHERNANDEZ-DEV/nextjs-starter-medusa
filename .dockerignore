@@ -1,0 +1,9 @@
+.git
+.next
+node_modules
+coverage*
+*.zip
+.swc
+tests
+cypress.config.ts
+medusa-client-key-pair.pem
