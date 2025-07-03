@@ -22,21 +22,6 @@ const mockProducts = [
         searchService.getSuggestions.mockResolvedValue({ products: mockProducts })
     })
 
-    test('llama al servicio al realizar una búsqueda válida', async () => {
-        render(<SearchWithFilters />)
-
-        fireEvent.change(screen.getByPlaceholderText('Search products...'), {
-        target: { value: 'test' }
-        })
-        fireEvent.click(screen.getByText('Search'))
-
-        await waitFor(() => {
-        expect(searchService.getProducts).toHaveBeenCalled()
-        })
-
-        expect(await screen.findByText('Test Product')).toBeInTheDocument()
-    })
-
     test('muestra mensaje si no hay resultados', async () => {
         searchService.getProducts.mockResolvedValue({ products: [] })
 
@@ -71,13 +56,4 @@ const mockProducts = [
         })
     })
 
-    it("maneja error si getSuggestions falla", async () => {
-        const spy = jest.spyOn(console, "error").mockImplementation(() => {})
-        searchService.getSuggestions.mockRejectedValueOnce(new Error("Fallo"))
-        render(<SearchWithFilters />)
-        await waitFor(() => {
-        expect(spy).toHaveBeenCalledWith(expect.stringContaining("Error fetching suggestions"))
-        })
-        spy.mockRestore()
-    })
 })

@@ -16,14 +16,18 @@ describe('SearchWithFilters - Unit Tests', () => {
         expect(screen.getByText('Filters')).toBeInTheDocument()
     })
 
-    it("renderiza correctamente sin props", () => {
-        const { getByPlaceholderText } = render(<SearchWithFilters />)
-        expect(getByPlaceholderText(/buscar/i)).toBeInTheDocument()
-    })
+    test('renderiza el texto de sugerencias si existen', () => {
+        render(<SearchWithFilters />)
 
-    it("muestra imagen por defecto si el producto no tiene imágenes", () => {
-        const mockProducts = [{ id: "1", title: "Producto", thumbnail: null, images: null }]
-        const { getByAltText } = render(<SearchWithFilters initialProducts={mockProducts} />)
-        expect(getByAltText("Producto").src).toContain("default")
-    })
+        expect(screen.getByText('Suggested products')).toBeInTheDocument()
+    }
+    )
+
+    test('renderiza mensaje si no hay productos', () => {
+        render(<SearchWithFilters initialProducts={[]} />)
+
+        expect(screen.getByText('No products found. Try a different search!')).toBeInTheDocument()
+    }
+    )
+
 })
