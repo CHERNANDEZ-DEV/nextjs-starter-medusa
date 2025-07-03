@@ -3,11 +3,11 @@ import axios from 'axios';
 import api from './api';
 
 const PUBLISHABLE_API_KEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY
-const MEDUSA_BACKEND_URL = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL;
+const MEDUSA_BACKEND_URL = process.env.MEDUSA_BACKEND_URL;
 
 const getProducts = async (query) => {
     try {
-        const response = await axios.get(`${MEDUSA_BACKEND_URL}/store/products?title=${query}`, {
+        const response = await axios.get('https://barato.cfd/store/products?title=${query}', {
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
@@ -26,7 +26,7 @@ const getProducts = async (query) => {
 
 const getSuggestions = async () => {
     try {
-        const response = await axios.get(`${MEDUSA_BACKEND_URL}/store/products/`, {
+        const response = await axios.get('https://barato.cfd/store/products/', {
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
