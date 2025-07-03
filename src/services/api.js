@@ -1,9 +1,10 @@
 "use client";
 import axios from 'axios';
 const PUBLISHABLE_API_KEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY
+const MEDUSA_BACKEND_URL = process.env.MEDUSA_BACKEND_URL || 'http://localhost:9000';
 
 const api = axios.create({
-    baseURL: 'http://localhost:9000/store/products',
+    baseURL: `${MEDUSA_BACKEND_URL}/store/products/`,
     headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
@@ -12,5 +13,6 @@ const api = axios.create({
 });
 
 export default api;
+
 
 //hola
