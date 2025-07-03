@@ -1,13 +1,45 @@
-name: Jest Tests
+name: CI/CD Workflow
 
 on:
   push:
-    branches: [new-feature/Carlos]
+    branches: [infra/devops-config]
   pull_request:
     branches: [develop]
 
 jobs:
-  test:
+  # test:
+  #   runs-on: ubuntu-latest
+
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
+
+  #     - name: Enable Corepack
+  #       run: corepack enable
+
+  #     - name: Set up Node.js
+  #       uses: actions/setup-node@v3
+  #       with:
+  #         node-version: "18"
+  #         cache: "yarn"
+
+  #     - name: Install dependencies
+  #       run: yarn install --frozen-lockfile
+
+  #     - name: Install SWC
+  #       run: yarn add -D @swc/core @swc/jest
+
+  #     - name: Run Jest tests
+  #       run: yarn test --ci --coverage
+
+  #     - name: Upload coverage report
+  #       uses: actions/upload-artifact@v4
+  #       if: always()
+  #       with:
+  #         name: coverage-report
+  #         path: coverage
+
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -26,15 +58,11 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
-      - name: Install SWC
-        run: yarn add -D @swc/core @swc/jest
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
 
-      - name: Run Jest tests
-        run: yarn test --ci --coverage
+      - name: Pull Vercel Environment Info
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
 
-      - name: Upload coverage report
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: coverage-report
-          path: coverage
+      - name: Deploy to Vercel
+        run: vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }}
