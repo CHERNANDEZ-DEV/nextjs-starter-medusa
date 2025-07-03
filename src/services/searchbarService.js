@@ -3,7 +3,7 @@ import axios from 'axios';
 import api from './api';
 
 const PUBLISHABLE_API_KEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY
-const MEDUSA_BACKEND_URL = process.env.MEDUSA_BACKEND_URL;
+const MEDUSA_BACKEND_URL = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL;
 
 const getProducts = async (query) => {
     try {
