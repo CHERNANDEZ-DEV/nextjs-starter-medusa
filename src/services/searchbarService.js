@@ -2,16 +2,13 @@
 import axios from 'axios';
 import api from './api';
 
-const PUBLISHABLE_API_KEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY
-const MEDUSA_BACKEND_URL = process.env.MEDUSA_BACKEND_URL;
-
 const getProducts = async (query) => {
     try {
-        const response = await axios.get('https://barato.cfd/store/products?title=${query}', {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}?title=${query}`, {
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
-                'x-publishable-api-key': PUBLISHABLE_API_KEY,
+                'x-publishable-api-key': process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY,
             },
         });
         if (response.status !== 200) {
@@ -26,12 +23,12 @@ const getProducts = async (query) => {
 
 const getSuggestions = async () => {
     try {
-        const response = await axios.get('https://barato.cfd/store/products/', {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/`, {
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
 
-                'x-publishable-api-key': PUBLISHABLE_API_KEY,
+                'x-publishable-api-key': process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY,
             },
         });
         if (response.status !== 200) {
