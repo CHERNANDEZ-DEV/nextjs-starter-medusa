@@ -395,6 +395,7 @@ const SearchWithFilters = () => {
               placeholder="Search products..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
+              onFocus={() => setShowSuggestions(true)}
               className="w-full p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-700"
             />
             {showSuggestions && query && suggestions.length > 0 && (
