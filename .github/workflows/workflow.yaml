@@ -16,10 +16,12 @@ jobs:
       CI: true
       MY_CUSTOM_VAR: valor-ejemplo
       NEXT_PUBLIC_MEDUSA_BACKEND_URL: https://barato.cfd
-      NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY: pk_4a21e6acda0b5787b02049c5e7fb8f5f27c62f0a9cf33f3bdc251af98375e19d
+      #NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY: pk_4a21e6acda0b5787b02049c5e7fb8f5f27c62f0a9cf33f3bdc251af98375e19d
+      NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY: ${{ secrets.PUBLISHABLE_KEY }}
       NEXT_PUBLIC_BASE_URL: http://localhost:8000
       NEXT_PUBLIC_DEFAULT_REGION: us
-      REVALIDATE_SECRET: supersecret
+      #REVALIDATE_SECRET: supersecret
+      REVALIDATE_SECRET: ${{ secrets.REVALIDATE_SECRET }}
 
     steps:
       - name: Checkout code
