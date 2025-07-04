@@ -21,6 +21,8 @@ const getProducts = async (query) => {
     }
 }
 
+// hola
+
 const getSuggestions = async () => {
     try {
         const response = await axios.get('https://barato.cfd/store/products', {
