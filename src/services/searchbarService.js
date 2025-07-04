@@ -4,11 +4,11 @@ import api from './api';
 
 const getProducts = async (query) => {
     try {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}?title=${query}`, {
+        const response = await axios.get(`https://barato.cfd/store/products?title=${query}`, {
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
-                'x-publishable-api-key': process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY,
+                'x-publishable-api-key': 'pk_4a21e6acda0b5787b02049c5e7fb8f5f27c62f0a9cf33f3bdc251af98375e19d',
             },
         });
         if (response.status !== 200) {
@@ -23,12 +23,11 @@ const getProducts = async (query) => {
 
 const getSuggestions = async () => {
     try {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/`, {
+        const response = await axios.get('https://barato.cfd/store/products', {
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
-
-                'x-publishable-api-key': process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY,
+                'x-publishable-api-key': 'pk_4a21e6acda0b5787b02049c5e7fb8f5f27c62f0a9cf33f3bdc251af98375e19d',
             },
         });
         if (response.status !== 200) {
@@ -43,8 +42,13 @@ const getSuggestions = async () => {
 
 const searchProducts = async (query) => {
     try {
-        const response = await api.get('/', {
-            params: { q: query }
+        const response = await axios.get('/', {
+            params: { q: query },
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'x-publishable-api-key': 'pk_4a21e6acda0b5787b02049c5e7fb8f5f27c62f0a9cf33f3bdc251af98375e19d',
+            },
         });
         return response.data;
     } catch (error) {
